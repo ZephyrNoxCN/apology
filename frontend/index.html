@@ -257,11 +257,11 @@
 
   <div class="forgiven-state">
     <div class="forgiven-emoji">😊💖</div>
-    <div class="forgiven-msg">没关系，我原谅你啦 ❤️</div>
+    <div class="forgiven-msg">太好了，你终于原谅我了，我们见见面吧 ❤️</div>
     <div class="forgiven-reply">
       <strong>你的道歉：</strong><br>
       <span id="displayMessage">我错了，能见见面吗？</span><br><br>
-      <span style="color:#ad1457;font-size:14px;">💖 原谅你了，要说到做到哦~</span>
+      <span style="color:#ad1457;font-size:14px;">💖 约好了，不见不散哦~</span>
     </div>
     <button class="btn-restart" onclick="resetAll()">💫 再来一次</button>
   </div>
@@ -274,6 +274,9 @@ let isForgiven = false;
 let particles = [];
 let animFrame = null;
 const MAX_METER = 12;
+const isMobile = 'ontouchstart' in window;
+const ESCAPE_PADDING = isMobile ? 40 : 20;
+const MAX_VIEWPORT_ESCAPES = 8;
 
 const card = document.getElementById('card');
 const btnNo = document.getElementById('btnNo');
@@ -320,8 +323,6 @@ function growYesButton() {
   btnYes.style.boxShadow = `0 ${6 + attempts}px ${20 + attempts * 2}px rgba(233,30,99,${0.3 + attempts * 0.03})`;
 }
 
-const ESCAPE_PADDING = 10;
-
 function escapeNoButton(e) {
   if (isForgiven) return;
   attempts++;
@@ -336,13 +337,25 @@ function escapeNoButton(e) {
     cy = e.clientY;
   }
 
-  const maxX = window.innerWidth - bRect.width - ESCAPE_PADDING;
-  const maxY = window.innerHeight - bRect.height - ESCAPE_PADDING;
-  const minDist = 100 + attempts * 10;
+  const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+  const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+
+  let maxX, maxY;
+  if (isMobile && attempts > MAX_VIEWPORT_ESCAPES) {
+    const cardRect = card.getBoundingClientRect();
+    maxX = cardRect.right - bRect.width - 10;
+    maxY = cardRect.bottom - bRect.height + 80;
+    if (maxY < cardRect.top + 50) maxY = cardRect.top + 100;
+  } else {
+    maxX = vw - bRect.width - ESCAPE_PADDING;
+    maxY = vh - bRect.height - ESCAPE_PADDING;
+  }
+
+  const minDist = Math.min(80 + attempts * 8, isMobile ? 120 : 250);
   let x, y, dist, tries = 0;
   do {
-    x = ESCAPE_PADDING + Math.random() * Math.max(10, maxX - ESCAPE_PADDING);
-    y = ESCAPE_PADDING + Math.random() * Math.max(10, maxY - ESCAPE_PADDING);
+    x = ESCAPE_PADDING + Math.random() * Math.max(10, maxX - ESCAPE_PADDING * 2);
+    y = ESCAPE_PADDING + Math.random() * Math.max(10, maxY - ESCAPE_PADDING * 2);
     dist = Math.hypot(x - cx, y - cy);
   } while (dist < minDist && tries++ < 50);
 
